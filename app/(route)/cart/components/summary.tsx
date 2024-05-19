@@ -1,7 +1,7 @@
 'use client';
 
 import axios from 'axios';
-import { use, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import Button from '@/components/ui/button';
@@ -9,26 +9,27 @@ import Currency from '@/components/ui/currency';
 import useCart from '@/hooks/use-cart';
 
 const Summary = () => {
-  const seatchParams = useSearchParams();
+  const searchParams = useSearchParams();
   const items = useCart((state) => state.items);
   const removeAll = useCart((state) => state.removeAll);
 
   /** これが定番の書き方みたい！ */
   useEffect(() => {
-    if (seatchParams.has('success')) {
+    if (searchParams.has('success')) {
       toast.success('Payment successful');
       removeAll();
     }
-    if (seatchParams.has('canceled')) {
+    if (searchParams.has('canceled')) {
       toast.error('Payment canceled');
     }
-  }, []);
+  }, [searchParams, removeAll]);
 
   const totalPrice = items.reduce((total, item) => {
     return total + Number(item.price);
   }, 0);
 
   const onCheckout = async () => {
+    console.log(`checkout:${process.env.NEXT_PUBLIC_API_URL}/checkout`);
     const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/checkout`, {
       productIds: items.map((item) => item.id),
     });
@@ -44,7 +45,7 @@ const Summary = () => {
           <Currency value={totalPrice} />
         </div>
       </div>
-      <Button className='w-full mt-6' onClick={onCheckout}>
+      <Button disabled={items.length === 0} className='w-full mt-6' onClick={onCheckout}>
         Checkout
       </Button>
     </div>
